@@ -7,6 +7,7 @@ import numpy as np
 field = 'corn1'
 
 snippets = pd.read_csv(f'results/data/{field}/events.csv')
+# From this I just want the length and the intensity per snippet, so you can use your summarised ones
 snippets = snippets[snippets['length']>0]
 
 # Equation for damped oscillator
