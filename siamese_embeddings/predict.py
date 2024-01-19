@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from model import SiameseNetwork, ContrastiveLoss
-from dataloader import SiameseDataset, SiamesePredictionDataset, ContrastiveSampler
+from model import SiameseNetwork, TripletLoss
+from dataloader import SiameseDataset, SiamesePredictionDataset, TripletSampler
 from torch.utils.tensorboard import SummaryWriter
 from utils import load_data
 import numpy as np

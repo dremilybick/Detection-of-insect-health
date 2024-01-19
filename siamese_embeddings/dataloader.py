@@ -10,7 +10,7 @@ from torch.utils.data import Sampler
 import librosa
 
 
-class ContrastiveSampler(Sampler):
+class TripletSampler(Sampler):
     def __init__(self, siamese_dataset, batch_size=32, margin=1.0):
         self.siamese_dataset = siamese_dataset
         self.margin = margin

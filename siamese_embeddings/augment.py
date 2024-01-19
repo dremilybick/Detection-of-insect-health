@@ -88,26 +88,3 @@ def get_envelope(self, signal):
     analytic_signal = hilbert(signal)
     amplitude_envelope = np.abs(analytic_signal)
     return amplitude_envelope
-
-# fig, axs = plt.subplots(2,5)
-# noise = 0.1
-# for i in range(5):
-#     number = np.random.randint(5)
-#     number = i
-#     data = data_generator(number)
-#     axs[0,i].plot(smooth(crop_and_pad(data,noise)))
-#     data = augment(data, 0.1,0.9)
-#     axs[1][i].plot(smooth(crop_and_pad(data, noise)))
-#     axs[0,i].set_title(number)
-# plt.show()
-#
-#
-# fig, axs = plt.subplots(5,5, sharex=True, sharey=True)
-# noise = 0.1
-# mapper = {0:'a',1:'b',2:'c',3:'d',4:'e'}
-# for i in range(5):
-#     for j in range(5):
-#         data = data_generator(i)
-#         axs[j,i].plot(smooth(crop_and_pad(data,noise)))
-#         axs[0,i].set_title(mapper[i])
-# plt.show()

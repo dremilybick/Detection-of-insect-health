@@ -1,8 +1,8 @@
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from model import SiameseSpectral, ContrastiveLoss
-from dataloader import SiameseSpectralDataset, ContrastiveSampler
+from model import SiameseSpectral, TripletLoss
+from dataloader import SiameseSpectralDataset, TripletSampler
 from torch.utils.tensorboard import SummaryWriter
 from utils import load_data
 import os
@@ -32,7 +32,7 @@ if checkpoint is not None:
     checkpoint = torch.load(checkpoint)
     siamese_model.load_state_dict(checkpoint)
 
-contrastive_loss = ContrastiveLoss(margin=loss_margin)
+triplet_loss = TripletLoss(margin=loss_margin)
 optimiser = optim.Adam(siamese_model.parameters(), lr=initial_lr)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, patience=scheduler_patience)
 
@@ -42,10 +42,10 @@ test_signals, test_thresholds, test_origin = load_data('test.txt')
 train_dataset = SiameseSpectralDataset(train_signals, train_thresholds, train_origin)
 test_dataset = SiameseSpectralDataset(test_signals, test_thresholds, test_origin)
 
-contrastive_train = ContrastiveSampler(train_dataset, batch_size=batch_size)
-train_loader = DataLoader(train_dataset, batch_sampler=contrastive_train)
-contrastive_test = ContrastiveSampler(train_dataset, batch_size=batch_size)
-test_loader = DataLoader(train_dataset, batch_sampler=contrastive_train)
+triplet_train = TripletSampler(train_dataset, batch_size=batch_size)
+train_loader = DataLoader(train_dataset, batch_sampler=triplet_train)
+triplet_test = TripletSampler(train_dataset, batch_size=batch_size)
+test_loader = DataLoader(train_dataset, batch_sampler=triplet_train)
 
 for epoch in range(num_epochs):
     siamese_model.train()
@@ -63,8 +63,8 @@ for epoch in range(num_epochs):
         positive_embedding = siamese_model(positive)
         negative_embedding = siamese_model(negative)
 
-        # Calculate contrastive loss
-        loss = contrastive_loss(anchor_embedding, positive_embedding, negative_embedding)
+        # Calculate triplet loss
+        loss = triplet_loss(anchor_embedding, positive_embedding, negative_embedding)
         avg_loss += loss
 
         # Backward pass and optimisation
@@ -98,7 +98,7 @@ for epoch in range(num_epochs):
             anchor_embedding = siamese_model(anchor)
             positive_embedding = siamese_model(positive)
             negative_embedding = siamese_model(negative)
-            test_loss += contrastive_loss(anchor_embedding, positive_embedding, negative_embedding)
+            test_loss += triplet_loss(anchor_embedding, positive_embedding, negative_embedding)
 
     num_samples = len(test_loader)
     test_loss /= num_samples
