@@ -1,3 +1,4 @@
+from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -80,25 +81,34 @@ snippets['length'] = snippets['event'].str.len() - 300
 snippets['intensity'] = snippets['event'].apply(max)
 snippets.to_csv(f'results/data/{field}/events.csv', index=False)
 
+#%%
+
+snippets = pd.read_csv(f'results/data/{field}/events.csv')
+snippets = snippets[snippets['length']>0]
 
 # Intensity/length plots
-def damped_oscillator(x, m, c):
-    return (-2*m/c)*(np.log(0.0001)-np.log(x))
-def estimate_damping_coefficient(t, x0):
-    tau = t / np.log(x0 / (x0 - 0.001))
-    c_estimate = 2 * x0 / (tau * t)
-    return c_estimate
+def damped_oscillator(x, m, c, p):
+    return (-2*m/c)*(np.log(0.0001)-np.log(x)) - p
 
-# Estimate the damping coefficient by taking the median
-cs = []
-for i, row in snippets.iterrows():
-    c_est = estimate_damping_coefficient(row['length'], row['intensity'])
-    cs.append(c_est)
-cest =np.median(cs)
+params, _ = curve_fit(damped_oscillator, snippets['intensity'], snippets['length'])
+m, c, p = params
 
-# Generate the damped oscillator trend line - values 0.0013 and -80 found empirically
+y_fit = [damped_oscillator(x, m, c, p) for x in snippets['intensity']]
+residuals = snippets['length'] - y_fit
+
+# Set a threshold (e.g., 2 standard deviations)
+threshold = 2 * np.std(residuals)
+
+# Identify outliers
+outliers = np.abs(residuals) > threshold
+
+params, _ = curve_fit(damped_oscillator, snippets[~outliers]['intensity'], snippets[~outliers]['length'])
+m, c, p = params
+
+
+# Generate the damped oscillator trend line
 x_vals = np.arange(min(snippets['intensity']),max(snippets['intensity']),max(snippets['intensity'])/100)
-y = [damped_oscillator(x, 0.0013, cest)-80 for x in x_vals]
+y = [damped_oscillator(x, m, c, p) for x in x_vals]
 plt.plot(x_vals, y)
 
 # Plot intensity/length of data
@@ -106,3 +116,6 @@ plt.scatter(snippets['intensity'], snippets['length'])
 plt.xlabel('max intensity')
 plt.ylabel('length')
 plt.tight_layout()
+
+ychi = [damped_oscillator(x, m, c, p) for x in snippets['intensity']]
+chi_square = np.sum(((snippets['length'] - ychi)) ** 2)/(len(snippets)-len(params))
