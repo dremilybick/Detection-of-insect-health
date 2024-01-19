@@ -38,6 +38,34 @@ class ContrastiveSampler(Sampler):
         return torch.randint(0, len(self.siamese_dataset), (1,)).item()
 
 
+class SiameseGeneratedDataset(Dataset):
+    def __init__(self, signals, thresholds, origins):
+        self.signals = signals
+        self.thresholds = thresholds
+        self.origin = origins
+
+    def __len__(self):
+        return len(self.signals)
+
+    def __getitem__(self, index):
+        anchor = data_generator(np.random.randint(5), 0.1)
+        negative = data_generator(np.random.randint(5),0.1)
+        signal = [anchor, anchor, negative]
+        noise_level = [0.1,0.1,0.1]
+
+        signal[0] = crop_and_pad(signal[0], noise_level[0])
+
+        signal[1] = augment(signal[1], noise_level[1], 0.9)
+        signal[1] = crop_and_pad(signal[1], noise_level[1])
+
+        signal[2] = crop_and_pad(signal[2], noise_level[2])
+
+        signal = [smooth(x) for x in signal]
+
+        sample = torch.FloatTensor(np.array(signal))
+
+        return [sample[0],sample[1],sample[2]]
+
 class SiameseDataset(Dataset):
     def __init__(self, signals, thresholds, origins):
         self.signals = signals
@@ -53,11 +81,6 @@ class SiameseDataset(Dataset):
 
         noise_level = self.thresholds[index]
         noise_level = [x for x in noise_level]
-
-        # anchor = data_generator(np.random.randint(5), 0.1)
-        # negative = data_generator(np.random.randint(5),0.1)
-        # signal = [anchor, anchor, negative]
-        # noise_level = [0.1,0.1,0.1]
 
         signal[0] = crop_and_pad(signal[0], noise_level[0])
 
